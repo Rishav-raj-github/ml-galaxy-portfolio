@@ -1,8 +1,8 @@
-/**
- * ML Galaxy Portfolio - Full-Stack AI FastAPI Service (2026 Edition)
- * Implements a production-ready REST API for serving real-time ML model inference.
- * Includes CORS middleware, Pydantic schemas, and structured logging.
- */
+"""
+ML Galaxy Portfolio - Full-Stack AI FastAPI Service (2026 Edition)
+Implements a production-ready REST API for serving real-time ML model inference.
+Includes CORS middleware, Pydantic schemas, and structured logging.
+"""
 
 import logging
 from fastapi import FastAPI, HTTPException
@@ -57,8 +57,6 @@ def read_root():
 def predict_housing(features: HousingFeatures):
     logger.info(f"Received housing prediction request: SQFT={features.sqft}, Bed={features.bedrooms}")
     try:
-        # Core numerical equation simulating fitted ElasticNet regression parameters:
-        # Base price $150,000 + $125 per sqft + $15k per bedroom + $25k per bathroom + $100k if premium
         base = 150000.0
         price = (base + 
                  (features.sqft * 125.0) + 
@@ -83,8 +81,6 @@ def predict_housing(features: HousingFeatures):
 def predict_credit(features: CreditRiskFeatures):
     logger.info(f"Received credit default request: Income={features.income}, Score={features.credit_score}")
     try:
-        # Core Sigmoid calculation simulating Logistic Regression classifier parameters:
-        # Logit formula: z = -0.5 + (debt_ratio * 3.5) - (credit_score - 600) / 100 - (income / 100000)
         z = -0.5 + (features.debt_ratio * 3.5) - ((features.credit_score - 600) / 100.0) - (features.income / 100000.0)
         probability = 1.0 / (1.0 + 2.718281828459045 ** (-z)) # Math Sigmoid
         
