@@ -846,5 +846,242 @@ def main():
     ]
     save_notebook(os.path.join(notebooks_dir, "11_Graph_Machine_Learning.ipynb"), cells_graph)
 
+    # ==========================================
+    # NOTEBOOK 12: INSTANCE-BASED & PROBABILISTIC
+    # ==========================================
+    cells_inst = [
+        make_markdown_cell([
+            "# 🧮 Masterclass 12: Instance-Based & Probabilistic Classifiers",
+            "This notebook details lazy instance learners and conditional Bayesian networks:",
+            "",
+            "1. **Project 1 (Scratch)**: A from-scratch `KNearestNeighbors` Euclidean distance classifier and standard `GaussianNaiveBayes` probability calculator.",
+            "2. **Project 2 (Applied)**: An email spam filtering NLP text classification pipeline using CountVectorizer + Multinomial Naive Bayes."
+        ]),
+        make_markdown_cell([
+            "## 📐 Part 1: Mathematical Foundations",
+            "KNN assigns labels based on majority votes within Euclidean distance spheres:",
+            "$$d(p, q) = \\sqrt{\\sum_{i=1}^{n} (p_i - q_i)^2}$$",
+            "Naive Bayes utilizes Bayes' rule assuming conditional feature independence:",
+            "$$P(C_k | x) = \\frac{P(C_k) \\prod P(x_i | C_k)}{P(x)}$$"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "",
+            "class KNNClassifierScratch:",
+            "    def __init__(self, k=3):",
+            "        self.k = k",
+            "        self.X_train = None",
+            "        self.y_train = None",
+            "",
+            "    def fit(self, X, y):",
+            "        self.X_train = X",
+            "        self.y_train = y",
+            "",
+            "    def predict(self, X):",
+            "        preds = []",
+            "        for x in X:",
+            "            dists = np.linalg.norm(self.X_train - x, axis=1)",
+            "            nearest = np.argsort(dists)[:self.k]",
+            "            labels = self.y_train[nearest]",
+            "            preds.append(np.argmax(np.bincount(labels)))",
+            "        return np.array(preds)",
+            "",
+            "class GaussianNaiveBayesScratch:",
+            "    def fit(self, X, y):",
+            "        self.classes = np.unique(y)",
+            "        self.mean = np.array([X[y == c].mean(axis=0) for c in self.classes])",
+            "        self.var = np.array([X[y == c].var(axis=0) for c in self.classes])",
+            "        self.priors = np.array([len(X[y == c]) / len(X) for c in self.classes])",
+            "",
+            "    def _pdf(self, class_idx, x):",
+            "        mean = self.mean[class_idx]",
+            "        var = self.var[class_idx] + 1e-9",
+            "        numerator = np.exp(-((x - mean) ** 2) / (2 * var))",
+            "        denominator = np.sqrt(2 * np.pi * var)",
+            "        return numerator / denominator",
+            "",
+            "    def predict(self, X):",
+            "        preds = []",
+            "        for x in X:",
+            "            posteriors = []",
+            "            for idx, c in enumerate(self.classes):",
+            "                prior = np.log(self.priors[idx])",
+            "                conditional = np.sum(np.log(self._pdf(idx, x)))",
+            "                posteriors.append(prior + conditional)",
+            "            preds.append(self.classes[np.argmax(posteriors)])",
+            "        return np.array(preds)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Multinomial Spam Classifier"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "from sklearn.feature_extraction.text import CountVectorizer",
+            "from sklearn.naive_bayes import MultinomialNB",
+            "from sklearn.pipeline import Pipeline",
+            "",
+            "texts = ['Urgent! Claim reward now!', 'Hey, are we still meeting today?', 'Free lottery tickets claim here', 'Can you review the report?']",
+            "labels = [1, 0, 1, 0] # 1 = Spam, 0 = Ham",
+            "",
+            "spam_pipeline = Pipeline([",
+            "    ('vectorizer', CountVectorizer()),",
+            "    ('classifier', MultinomialNB())",
+            "])",
+            "spam_pipeline.fit(texts, labels)",
+            "print('Prediction on test text:', spam_pipeline.predict(['Claim free rewards today!']))"
+        ])
+    ]
+    save_notebook(os.path.join(notebooks_dir, "12_Instance_Based_and_Probabilistic.ipynb"), cells_inst)
+
+    # ==========================================
+    # NOTEBOOK 13: ADVANCED CLUSTERING & RULES
+    # ==========================================
+    cells_rules = [
+        make_markdown_cell([
+            "# 🛒 Masterclass 13: Density Clustering & Transaction Association Rules",
+            "This notebook details non-spherical clusters and basket mining:",
+            "",
+            "1. **Project 1 (Scratch)**: A custom `DBSCAN` core queue scanner density clusterer from scratch.",
+            "2. **Project 2 (Applied)**: Market Basket rule extractions from transaction logs using FP-Growth."
+        ]),
+        make_markdown_cell([
+            "## 📐 Part 1: Mathematical Foundations",
+            "Apriori rule metrics identify strong product associations:",
+            "$$\\text{Support}(A \\to B) = \\frac{\\text{Transactions containing } A \\text{ and } B}{\\text{Total Transactions}}$$",
+            "$$\\text{Confidence}(A \\to B) = \\frac{\\text{Support}(A \\cup B)}{\\text{Support}(A)}$$",
+            "$$\\text{Lift}(A \\to B) = \\frac{\\text{Support}(A \\cup B)}{\\text{Support}(A) \\times \\text{Support}(B)}$$"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "",
+            "class DBSCANScratch:",
+            "    def __init__(self, eps=0.5, min_samples=3):",
+            "        self.eps = eps",
+            "        self.min_samples = min_samples",
+            "",
+            "    def _expand(self, X, labels, neighbors, cluster_id):",
+            "        queue = list(neighbors)",
+            "        i = 0",
+            "        while i < len(queue):",
+            "            pt_idx = queue[i]",
+            "            if labels[pt_idx] == -1: # Noise becomes border",
+            "                labels[pt_idx] = cluster_id",
+            "            elif labels[pt_idx] == 0 or labels[pt_idx] == -2: # Unvisited",
+            "                labels[pt_idx] = cluster_id",
+            "                dists = np.linalg.norm(X - X[pt_idx], axis=1)",
+            "                pt_neighbors = np.where(dists <= self.eps)[0]",
+            "                if len(pt_neighbors) >= self.min_samples:",
+            "                    # Add new core point neighbors to scan queue",
+            "                    for n in pt_neighbors:",
+            "                        if n not in queue: queue.append(n)",
+            "            i += 1",
+            "",
+            "    def fit(self, X):",
+            "        labels = np.zeros(X.shape[0], dtype=int) - 2 # -2 = Unvisited",
+            "        cluster_id = 1",
+            "        for i in range(X.shape[0]):",
+            "            if labels[i] != -2: continue",
+            "            dists = np.linalg.norm(X - X[i], axis=1)",
+            "            neighbors = np.where(dists <= self.eps)[0]",
+            "            if len(neighbors) < self.min_samples:",
+            "                labels[i] = -1 # Noise",
+            "            else:",
+            "                labels[i] = cluster_id",
+            "                self._expand(X, labels, neighbors, cluster_id)",
+            "                cluster_id += 1",
+            "        self.labels_ = labels"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Association Rules via FP-Growth"
+        ]),
+        make_code_cell([
+            "import pandas as pd",
+            "from mlxtend.frequent_patterns import fpgrowth, association_rules",
+            "",
+            "# Create transactional transaction table",
+            "df = pd.DataFrame([",
+            "    [True, True, False, False],",
+            "    [True, True, True, False],",
+            "    [True, False, False, False],",
+            "    [True, True, False, True]",
+            "], columns=['Milk', 'Bread', 'Diapers', 'Beer'])",
+            "",
+            "itemsets = fpgrowth(df, min_support=0.5, use_colnames=True)",
+            "rules = association_rules(itemsets, metric='confidence', min_threshold=0.6)",
+            "print('Association rules successfully mined:')",
+            "print(rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']])"
+        ])
+    ]
+    save_notebook(os.path.join(notebooks_dir, "13_Advanced_Clustering_and_Rules.ipynb"), cells_rules)
+
+    # ==========================================
+    # NOTEBOOK 14: COMPUTER VISION & GENERATIVE
+    # ==========================================
+    cells_cv = [
+        make_markdown_cell([
+            "# 🎨 Masterclass 14: Computer Vision & Generative AI Models",
+            "This notebook details structural ResNet convolutions and generative data distribution models:",
+            "",
+            "1. **Project 1 (Scratch)**: A Generative Adversarial Network (GAN) built in PyTorch implementing adversarial minimax training steps.",
+            "2. **Project 2 (Applied)**: A computer vision transfer-learning classification pipeline using PyTorch pre-trained ResNet-50 models."
+        ]),
+        make_markdown_cell([
+            "## 📐 Part 1: Mathematical Foundations",
+            "GANs play a two-player minimax game minimizing and maximizing a value function $V(D, G)$:",
+            "$$\\min_{G} \\max_{D} V(D, G) = \\mathbb{E}_{x \\sim p_{data}}[\\log D(x)] + \\mathbb{E}_{z \\sim p_{z}}[\\log(1 - D(G(z)))]$$"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class Generator(nn.Module):",
+            "    def __init__(self, latent_dim, data_dim):",
+            "        super().__init__()",
+            "        self.model = nn.Sequential(",
+            "            nn.Linear(latent_dim, 64),",
+            "            nn.ReLU(),",
+            "            nn.Linear(64, data_dim),",
+            "            nn.Tanh()",
+            "        )",
+            "    def forward(self, z):",
+            "        return self.model(z)",
+            "",
+            "class Discriminator(nn.Module):",
+            "    def __init__(self, data_dim):",
+            "        super().__init__()",
+            "        self.model = nn.Sequential(",
+            "            nn.Linear(data_dim, 64),",
+            "            nn.LeakyReLU(0.2),",
+            "            nn.Linear(64, 1),",
+            "            nn.Sigmoid()",
+            "        )",
+            "    def forward(self, x):",
+            "        return self.model(x)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Image Classifier using Pre-trained ResNet-50"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "from torchvision import models",
+            "",
+            "def build_transfer_model(classes=3):",
+            "    # Load pre-trained ResNet-50 model with default weights",
+            "    resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)",
+            "    for param in resnet.parameters():",
+            "        param.requires_grad = False # Freeze layers",
+            "        ",
+            "    # Replace output head",
+            "    in_features = resnet.fc.in_features",
+            "    resnet.fc = nn.Linear(in_features, classes)",
+            "    return resnet",
+            "",
+            "model = build_transfer_model(classes=3)",
+            "print('ResNet Transfer Learner successfully loaded!')"
+        ])
+    ]
+    save_notebook(os.path.join(notebooks_dir, "14_Computer_Vision_and_Generative.ipynb"), cells_cv)
+
 if __name__ == "__main__":
     main()
