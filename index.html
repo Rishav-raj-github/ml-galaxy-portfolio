@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 ML Galaxy Portfolio - 2026 Industry Prep Hub</title>
+    <!-- Google Fonts for elite modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- LaTeX math rendering in-browser via KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+    <!-- Project Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- 🌌 Galaxy Star Field Background Effect -->
+    <div class="galaxy-background"></div>
+
+    <!-- 🏷️ Sticky Glassmorphism Header Bar -->
+    <header class="glass-header animate-fade-in">
+        <div class="header-logo">
+            <span class="logo-emoji">🌌</span>
+            <div class="logo-text">
+                <h1>ML Galaxy Portfolio</h1>
+                <span class="sub-logo">2026 Data Science & ML Engineering Portfolio</span>
+            </div>
+        </div>
+        <nav class="header-nav">
+            <button class="nav-btn active" onclick="showSection('explorer-sec')">Model Explorer</button>
+            <button class="nav-btn" onclick="showSection('interview-sec')">Mock Interview Prep</button>
+            <a href="https://github.com" target="_blank" class="github-link-btn">
+                <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub Profile
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <!-- 📂 SECTION 1: MODEL EXPLORER (DEFAULT VIEW) -->
+        <section id="explorer-sec" class="section-pane active">
+            
+            <!-- 🔍 Search & Priority Filters Panel -->
+            <div class="search-panel glass-card animate-slide-up">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search across ML/DL/TS models (e.g. XGBoost, Linear Regression, Self-Attention)..." onkeyup="filterModels()">
+                </div>
+                <div class="filter-controls">
+                    <label class="switch-container">
+                        <input type="checkbox" id="priority-toggle" onchange="filterModels()">
+                        <span class="custom-slider"></span>
+                        <span class="switch-label">⭐ Show 2026 Core Industry Models Only</span>
+                    </label>
+                    <div class="results-badge" id="results-count">Showing all models</div>
+                </div>
+            </div>
+
+            <div class="explorer-grid">
+                <!-- 🗂️ LEFT COLUMN: CATEGORIES AND TILES -->
+                <div class="categories-column animate-slide-up">
+                    <div id="categories-container"></div>
+                </div>
+
+                <!-- 🧾 RIGHT COLUMN: SELECTED MODEL DEEP-DIVE -->
+                <div class="details-column animate-slide-up">
+                    <div id="placeholder-panel" class="detail-card glass-card empty-state">
+                        <div class="empty-icon animate-pulse">🪐</div>
+                        <h2>Select an ML Model to Inspect</h2>
+                        <p>Choose any model from the categorized grid on the left to reveal LaTeX mathematical derivations, interactive runtimes, pros/cons, and advanced code blocks.</p>
+                    </div>
+
+                    <div id="detail-panel" class="detail-card glass-card" style="display: none;">
+                        <!-- Model Header -->
+                        <div class="detail-header">
+                            <div>
+                                <span class="category-tag" id="detail-category-tag">Supervised</span>
+                                <h2 class="model-title" id="detail-title">Logistic Regression</h2>
+                            </div>
+                            <span class="industry-badge" id="detail-industry-badge">⭐ 2026 Industry Model</span>
+                        </div>
+
+                        <!-- Mathematical Intuition -->
+                        <div class="detail-section">
+                            <h3 class="section-subtitle">🎯 Algorithmic Intuition</h3>
+                            <p class="section-text" id="detail-concept">Concept description here...</p>
+                        </div>
+
+                        <!-- Interactive Math Card (KaTeX) -->
+                        <div class="detail-section math-section">
+                            <h3 class="section-subtitle">📐 Mathematical Foundations</h3>
+                            <div class="math-card" id="detail-math">
+                                $$J(\theta) = -\frac{1}{m} \sum \log(p)$$
+                            </div>
+                        </div>
+
+                        <!-- 🎨 Embedded Interactive Canvas Sandboxes -->
+                        <div class="detail-section sandbox-section" id="sandbox-container" style="display: none;">
+                            <h3 class="section-subtitle">⚡ Live Interactive Mathematical Sandbox</h3>
+                            <div class="sandbox-wrapper">
+                                <!-- Regression Canvas Controls -->
+                                <div id="regression-controls" class="sandbox-controls" style="display: none;">
+                                    <div class="control-group">
+                                        <label for="reg-degree">Polynomial Degree: <span id="degree-val">1</span></label>
+                                        <input type="range" id="reg-degree" min="1" max="5" value="1" oninput="updateRegressionParams()">
+                                    </div>
+                                    <div class="control-group">
+                                        <label for="reg-lambda">L2 Penalty (Ridge &lambda;): <span id="lambda-val">0.0</span></label>
+                                        <input type="range" id="reg-lambda" min="0" max="100" value="0" step="1" oninput="updateRegressionParams()">
+                                    </div>
+                                    <button class="clear-btn" onclick="clearRegressionPoints()">Clear Grid</button>
+                                </div>
+
+                                <!-- K-Means Canvas Controls -->
+                                <div id="kmeans-controls" class="sandbox-controls" style="display: none;">
+                                    <div class="control-group">
+                                        <label for="kmeans-k">Number of Clusters (K): <span id="k-val">3</span></label>
+                                        <input type="range" id="kmeans-k" min="2" max="5" value="3" oninput="updateKMeansParams()">
+                                    </div>
+                                    <button class="action-btn" onclick="stepKMeans()">Run Iteration Step</button>
+                                    <button class="clear-btn" onclick="regenerateKMeansPoints()">Regenerate Points</button>
+                                </div>
+
+                                <!-- Deep Learning Canvas Controls -->
+                                <div id="neural-controls" class="sandbox-controls" style="display: none;">
+                                    <button class="action-btn animate-glow" onclick="propagateNeuralNetwork()">Propagate Forward Pulse</button>
+                                </div>
+
+                                <div class="canvas-holder">
+                                    <canvas id="sandbox-canvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pros & Cons Grid -->
+                        <div class="detail-section">
+                            <div class="pros-cons-grid">
+                                <div class="pro-card">
+                                    <h4>🟢 Key Advantages</h4>
+                                    <ul id="detail-pros"></ul>
+                                </div>
+                                <div class="con-card">
+                                    <h4>🔴 Architectural Limits</h4>
+                                    <ul id="detail-cons"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Simulated High-End IDE Code Tabbed Pane -->
+                        <div class="detail-section code-explorer-section">
+                            <h3 class="section-subtitle">💻 Custom Projects Codebase</h3>
+                            <div class="ide-wrapper">
+                                <div class="ide-tab-bar">
+                                    <button class="ide-tab active" id="tab-proj1" onclick="switchProjectTab(1)">
+                                        <span class="file-icon">🐍</span> Project 1: Theoretical Scratch
+                                    </button>
+                                    <button class="ide-tab" id="tab-proj2" onclick="switchProjectTab(2)">
+                                        <span class="file-icon">🧪</span> Project 2: Industrial Applied
+                                    </button>
+                                </div>
+                                <div class="ide-file-info">
+                                    <span class="file-path-text" id="ide-filepath">notebooks/01_Supervised_Regression.ipynb</span>
+                                    <div class="file-badges">
+                                        <span class="file-badge-jup">Jupyter Notebook</span>
+                                        <button class="copy-btn" onclick="copySourceCode()">Copy Code</button>
+                                    </div>
+                                </div>
+                                <div class="ide-editor-window">
+                                    <pre><code id="ide-code-content">loading code...</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model Interview Q&As -->
+                        <div class="detail-section">
+                            <h3 class="section-subtitle">💡 Industry Interview Flashcards</h3>
+                            <div class="flashcards-wrapper" id="detail-flashcards"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🤝 SECTION 2: INTERVIEW PREPARATION MODULE -->
+        <section id="interview-sec" class="section-pane">
+            <div class="interview-header glass-card animate-slide-up">
+                <span class="header-icon">🧠</span>
+                <h2>2026 Core ML Interview Prep Simulator</h2>
+                <p>Hone your conceptual and algorithmic knowledge for quantitative trading, AI research, and senior machine learning engineering roles. Test yourself on the 20 most critical models and review expert-level, high-scoring verbal talking points.</p>
+            </div>
+
+            <div class="interview-layout">
+                <!-- Left checklist side -->
+                <div class="prep-checklist-column glass-card animate-slide-up">
+                    <h3>🎯 Industry Target Competencies</h3>
+                    <p class="checklist-desc">Assess your readiness across the core 20 models. Toggle your status below:</p>
+                    <div id="prep-checklist-container"></div>
+                </div>
+
+                <!-- Right Simulator Quiz card -->
+                <div class="prep-simulator-column glass-card animate-slide-up">
+                    <h3>⚡ Mock Interview Sandbox</h3>
+                    <div class="quiz-card-container">
+                        <div class="quiz-card" id="quiz-card-box">
+                            <div class="quiz-meta">
+                                <span class="quiz-category" id="quiz-model-category">Linear Regression</span>
+                                <span class="quiz-difficulty">Medium / High</span>
+                            </div>
+                            <h2 class="quiz-question" id="quiz-question-text">Explain the derivation of L1 and L2 regularizations, and how their gradient optimization properties yield sparse vs. dense weights.</h2>
+                            
+                            <div class="quiz-action-bar">
+                                <button class="show-ans-btn animate-glow" onclick="toggleQuizAnswer()">Reveal High-Scoring Response</button>
+                                <button class="next-quiz-btn" onclick="loadNextQuizQuestion()">Skip Question ➔</button>
+                            </div>
+
+                            <div class="quiz-answer-panel" id="quiz-answer-panel" style="display: none;">
+                                <h4>🏆 High-Scoring Verbal Talking Points:</h4>
+                                <div class="expert-answer-text" id="quiz-expert-answer">
+                                    Expert explanation details...
+                                </div>
+                                <div class="self-score-bar">
+                                    <p>How well did you align with these talking points?</p>
+                                    <div class="score-buttons">
+                                        <button class="score-btn score-poor" onclick="scoreSelfProgress('poor')">Needs Review ❌</button>
+                                        <button class="score-btn score-good" onclick="scoreSelfProgress('good')">Good Progress 🟨</button>
+                                        <button class="score-btn score-perfect" onclick="scoreSelfProgress('perfect')">Mastered 🏆</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Global JS Scripting -->
+    <script src="data.js"></script>
+    <script src="sandboxes.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
