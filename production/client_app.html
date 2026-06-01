@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ AI Microservice Client Dashboard - ML Galaxy</title>
+    <!-- Outfit & Inter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom client styling resembling premium glassmorphism -->
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --bg-card: rgba(13, 19, 31, 0.45);
+            --border-glass: rgba(255, 255, 255, 0.07);
+            --accent-cyan: #00f2fe;
+            --accent-pink: #f300ff;
+            --accent-green: #0ff0b3;
+            --accent-red: #ff0844;
+            --text-primary: #f1f3f9;
+            --text-secondary: #9aa5b9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            background-image: radial-gradient(circle at 50% 50%, #0d1320 0%, #06080d 100%);
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(120deg, #ffffff 40%, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .api-status {
+            display: inline-block;
+            background: rgba(15, 240, 179, 0.08);
+            border: 1px solid rgba(15, 240, 179, 0.3);
+            color: var(--accent-green);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-radius: 30px;
+            padding: 4px 14px;
+            margin-top: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--text-primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        .results-box {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .results-box.visible {
+            display: block;
+        }
+
+        .results-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-green);
+            margin-bottom: 12px;
+        }
+
+        .prediction-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .meta-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AI Microservice Client Dashboard</h1>
+            <p>A full-stack client application serving direct real-time predictions from your local FastAPI containerized backend.</p>
+            <div class="api-status" id="status-tag">Backend Service: Online (Mock Mode)</div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- 🏠 Housing Predictor Panel (ElasticNet Regression) -->
+            <div class="glass-panel">
+                <h2 class="panel-title">🏠 Price Estimator (ElasticNet)</h2>
+                <form id="housing-form" onsubmit="estimateHousePrice(event)">
+                    <div class="form-group">
+                        <label for="sqft">Square Footage (SQFT)</label>
+                        <input type="number" id="sqft" value="2200" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="beds">Bedrooms</label>
+                        <input type="number" id="beds" value="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="baths">Bathrooms</label>
+                        <input type="number" id="baths" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="premium">Location Zone</label>
+                        <select id="premium">
+                            <option value="false">Standard Suburbs</option>
+                            <option value="true">Premium Metropolitan Zone</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Run Regression Prediction</button>
+                </form>
+
+                <div class="results-box" id="housing-results">
+                    <h3 class="results-title">🏆 Regression Output</h3>
+                    <div class="prediction-value" id="housing-prediction">$0.00</div>
+                    <p class="meta-text">Model: ElasticNet Regularized Linear Regression (&alpha;=0.1)</p>
+                </div>
+            </div>
+
+            <!-- 💳 Credit Risk Panel (L1 Logistic Classification) -->
+            <div class="glass-panel">
+                <h2 class="panel-title">💳 Credit Risk Default (Logistic)</h2>
+                <form id="credit-form" onsubmit="calculateCreditRisk(event)">
+                    <div class="form-group">
+                        <label for="income">Annual Income ($)</label>
+                        <input type="number" id="income" value="75000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="debt">Debt-to-Income (DTI) Ratio</label>
+                        <input type="number" id="debt" min="0.0" max="1.0" step="0.05" value="0.35" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="score">Credit Rating (FICO Score)</label>
+                        <input type="number" id="score" min="300" max="850" value="680" required>
+                    </div>
+                    <button type="submit" class="submit-btn" style="background: var(--text-primary);">Run Classification Decision</button>
+                </form>
+
+                <div class="results-box" id="credit-results">
+                    <h3 class="results-title" id="credit-status-title" style="color: var(--accent-green);">✓ Application Decision</h3>
+                    <div class="prediction-value" id="credit-prediction">Probability: 0.0%</div>
+                    <p class="meta-text" id="credit-decision">Risk Status: Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Scripting -->
+    <script>
+        // Check if FastAPI backend is online at localhost:8000
+        let isBackendOnline = false;
+        
+        fetch('http://localhost:8000/')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'online') {
+                    isBackendOnline = true;
+                    document.getElementById('status-tag').innerText = 'Backend Service: FastAPI Container (Live)';
+                    document.getElementById('status-tag').style.borderColor = 'rgba(15, 240, 179, 0.4)';
+                    document.getElementById('status-tag').style.background = 'rgba(15, 240, 179, 0.08)';
+                    document.getElementById('status-tag').style.color = 'var(--accent-green)';
+                }
+            })
+            .catch(() => {
+                // Keep default Mock Mode
+                console.log("FastAPI backend is offline or loading. Operating in high-fidelity browser client mock mode.");
+            });
+
+        function estimateHousePrice(e) {
+            e.preventDefault();
+            const sqft = parseFloat(document.getElementById('sqft').value);
+            const beds = parseInt(document.getElementById('beds').value);
+            const baths = parseInt(document.getElementById('baths').value);
+            const premium = document.getElementById('premium').value === 'true';
+
+            if (isBackendOnline) {
+                // Call live container API
+                fetch('http://localhost:8000/predict/housing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sqft, bedrooms: beds, bathrooms: baths, is_premium_zone: premium })
+                })
+                .then(res => res.json())
+                .then(data => showHousingResults(data.prediction))
+                .catch(err => console.error(err));
+            } else {
+                // Fallback high-fidelity calculation in browser
+                const base = 150000;
+                const price = base + (sqft * 125) + (beds * 15000) + (baths * 25000) + (premium ? 100000 : 0);
+                showHousingResults(price);
+            }
+        }
+
+        function showHousingResults(price) {
+            const resultsBox = document.getElementById('housing-results');
+            resultsBox.classList.add('visible');
+            document.getElementById('housing-prediction').innerText = '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function calculateCreditRisk(e) {
+            e.preventDefault();
+            const income = parseFloat(document.getElementById('income').value);
+            const debt = parseFloat(document.getElementById('debt').value);
+            const score = parseInt(document.getElementById('score').value);
+
+            if (isBackendOnline) {
+                // Call live container API
+                fetch('http://localhost:8000/predict/credit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ income, debt_ratio: debt, credit_score: score })
+                })
+                .then(res => res.json())
+                .then(data => showCreditResults(data.default_probability, data.default_risk))
+                .catch(err => console.error(err));
+            } else {
+                // Fallback calculation
+                const z = -0.5 + (debt * 3.5) - ((score - 600) / 100) - (income / 100000);
+                const prob = 1 / (1 + Math.exp(-z));
+                showCreditResults(prob, prob >= 0.5);
+            }
+        }
+
+        function showCreditResults(prob, isFraud) {
+            const resultsBox = document.getElementById('credit-results');
+            const title = document.getElementById('credit-status-title');
+            resultsBox.classList.add('visible');
+            
+            document.getElementById('credit-prediction').innerText = 'Risk Score: ' + (prob * 100).toFixed(1) + '%';
+            
+            if (isFraud) {
+                title.innerText = '❌ Application Rejected';
+                title.style.color = 'var(--accent-red)';
+                document.getElementById('credit-decision').innerText = 'Risk Status: High Probability Default Risk Detected';
+            } else {
+                title.innerText = '✓ Application Approved';
+                title.style.color = 'var(--accent-green)';
+                document.getElementById('credit-decision').innerText = 'Risk Status: Healthy Applicant (Low Default Risk)';
+            }
+        }
+    </script>
+</body>
+</html>
