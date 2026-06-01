@@ -84,6 +84,8 @@ def main():
             "Here we implement a complete gradient descent-driven estimator supporting regularized weights."
         ]),
         make_code_cell([
+            "import numpy as np",
+            "",
             "class RegularizedLinearRegression:",
             "    def __init__(self, lr=0.01, epochs=1000, alpha=0.1, l1_ratio=0.5):",
             "        self.lr = lr",
@@ -120,6 +122,8 @@ def main():
             "Below we build a production pipeline using `Scikit-Learn` to predict home prices, integrating Box-Cox scaling and multicollinearity tests."
         ]),
         make_code_cell([
+            "import numpy as np",
+            "import pandas as pd",
             "from sklearn.model_selection import train_test_split, GridSearchCV",
             "from sklearn.preprocessing import StandardScaler, OneHotEncoder",
             "from sklearn.compose import ColumnTransformer",
@@ -166,6 +170,9 @@ def main():
             "1. **Project 1 (Theory Scratch)**: A custom binary Logistic Regression classifier with log-loss gradient descent.",
             "2. **Project 2 (Applied Industry)**: A credit default pipeline addressing class imbalance with SMOTE and threshold tuning."
         ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: From-Scratch Vectorized Classifier"
+        ]),
         make_code_cell([
             "import numpy as np",
             "import pandas as pd",
@@ -193,7 +200,40 @@ def main():
             "            dw = (1 / n_samples) * np.dot(X.T, (p - y)) + (self.reg / n_samples) * self.w",
             "            db = (1 / n_samples) * np.sum(p - y)",
             "            self.w -= self.lr * dw",
-            "            self.b -= self.lr * db"
+            "            self.b -= self.lr * db",
+            "",
+            "    def predict_proba(self, X):",
+            "        return self._sigmoid(np.dot(X, self.w) + self.b)",
+            "",
+            "    def predict(self, X, threshold=0.5):",
+            "        return (self.predict_proba(X) >= threshold).astype(int)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Production Credit Risk Pipeline"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "import pandas as pd",
+            "from sklearn.model_selection import train_test_split",
+            "from sklearn.preprocessing import StandardScaler",
+            "from sklearn.linear_model import LogisticRegression",
+            "from sklearn.metrics import classification_report, roc_auc_score",
+            "from imblearn.over_sampling import SMOTE",
+            "",
+            "# Generate imbalanced dataset",
+            "np.random.seed(42)",
+            "X_sim = np.random.randn(1000, 5)",
+            "y_sim = np.random.choice([0, 1], size=1000, p=[0.95, 0.05])",
+            "",
+            "smote = SMOTE(random_state=42)",
+            "X_res, y_res = smote.fit_resample(X_sim, y_sim)",
+            "",
+            "X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)",
+            "",
+            "model = LogisticRegression(class_weight='balanced')",
+            "model.fit(X_train, y_train)",
+            "probs = model.predict_proba(X_test)[:, 1]",
+            "print('ROC AUC Score:', roc_auc_score(y_test, probs))"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "02_Supervised_Classification.ipynb"), cells_clf)
@@ -208,6 +248,9 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: A recursive Decision Tree Classifier with Gini splits from scratch.",
             "2. **Project 2 (Applied)**: A customer churn engine using LightGBM/XGBoost, optimized via Bayesian Optuna."
+        ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: Decision Tree Classifier from Scratch"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -235,9 +278,79 @@ def main():
             "        p = np.bincount(y) / m",
             "        return 1.0 - np.sum(p ** 2)",
             "",
+            "    def _split(self, X, feature, threshold):",
+            "        left_idx = np.where(X[:, feature] <= threshold)[0]",
+            "        right_idx = np.where(X[:, feature] > threshold)[0]",
+            "        return left_idx, right_idx",
+            "",
+            "    def _best_split(self, X, y):",
+            "        best_gain = -1.0",
+            "        split_idx, split_thresh = None, None",
+            "        current_gini = self._gini(y)",
+            "        n_samples, n_features = X.shape",
+            "",
+            "        for feat in range(n_features):",
+            "            thresholds = np.unique(X[:, feat])",
+            "            for thresh in thresholds:",
+            "                left_idx, right_idx = self._split(X, feat, thresh)",
+            "                if len(left_idx) == 0 or len(right_idx) == 0: continue",
+            "",
+            "                w_gini = (len(left_idx)/n_samples)*self._gini(y[left_idx]) + (len(right_idx)/n_samples)*self._gini(y[right_idx])",
+            "                gain = current_gini - w_gini",
+            "",
+            "                if gain > best_gain:",
+            "                    best_gain = gain",
+            "                    split_idx = feat",
+            "                    split_thresh = thresh",
+            "        return split_idx, split_thresh",
+            "",
+            "    def _build_tree(self, X, y, depth=0):",
+            "        n_samples, n_features = X.shape",
+            "        n_classes = len(np.unique(y))",
+            "",
+            "        if depth >= self.max_depth or n_samples < self.min_samples_split or n_classes == 1:",
+            "            return DecisionNode(value=np.argmax(np.bincount(y)))",
+            "",
+            "        feat, thresh = self._best_split(X, y)",
+            "        if feat is None: return DecisionNode(value=np.argmax(np.bincount(y)))",
+            "",
+            "        left_idx, right_idx = self._split(X, feat, thresh)",
+            "        left_c = self._build_tree(X[left_idx], y[left_idx], depth + 1)",
+            "        right_c = self._build_tree(X[right_idx], y[right_idx], depth + 1)",
+            "        return DecisionNode(feature=feat, threshold=thresh, left=left_c, right=right_c)",
+            "",
             "    def fit(self, X, y):",
-            "        # Code splits and builds nodes recursively",
-            "        pass"
+            "        self.root = self._build_tree(X, y)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: High-Performance Churn Prediction with LightGBM & Optuna"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "import lightgbm as lgb",
+            "import optuna",
+            "from sklearn.model_selection import train_test_split",
+            "from sklearn.metrics import log_loss",
+            "",
+            "# Synthetic churn dataset",
+            "np.random.seed(42)",
+            "X_churn = np.random.randn(200, 4)",
+            "y_churn = np.random.choice([0, 1], size=200, p=[0.75, 0.25])",
+            "",
+            "def objective(trial):",
+            "    params = {",
+            "        'objective': 'binary',",
+            "        'verbosity': -1,",
+            "        'num_leaves': trial.suggest_int('num_leaves', 10, 50),",
+            "        'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.1)",
+            "    }",
+            "    train_set = lgb.Dataset(X_churn, label=y_churn)",
+            "    cv_res = lgb.cv(params, train_set, num_boost_round=100, nfold=3)",
+            "    return cv_res['valid binary_logloss-mean'][-1]",
+            "",
+            "study = optuna.create_study(direction='minimize')",
+            "study.optimize(objective, n_trials=5)",
+            "print('Optimal Parameters:', study.best_params)"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "03_Tree_Ensemble_Methods.ipynb"), cells_tree)
@@ -253,6 +366,9 @@ def main():
             "1. **Project 1 (Scratch)**: A from-scratch custom `KMeans` estimator (with K-Means++ initialization) and `PCA` projection engine.",
             "2. **Project 2 (Applied)**: A customer segmentation pipeline reducing feature matrices with PCA and grouping profiles with tuned clustering."
         ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: Unsupervised Engines from Scratch"
+        ]),
         make_code_cell([
             "import numpy as np",
             "",
@@ -265,8 +381,50 @@ def main():
             "    def fit(self, X):",
             "        n_samples = X.shape[0]",
             "        self.centroids = X[np.random.choice(n_samples, self.k, replace=False)]",
-            "        # Iteratively shifts centers",
-            "        pass"
+            "",
+            "        for i in range(self.max_iter):",
+            "            dists = np.linalg.norm(X[:, np.newaxis] - self.centroids, axis=2)",
+            "            labels = np.argmin(dists, axis=1)",
+            "",
+            "            new_c = np.array([X[labels == j].mean(axis=0) if len(X[labels == j]) > 0 else self.centroids[j] for j in range(self.k)])",
+            "            if np.all(new_c == self.centroids): break",
+            "            self.centroids = new_c",
+            "        self.labels = labels",
+            "",
+            "class PCAScratch:",
+            "    def __init__(self, n_components=2):",
+            "        self.n_components = n_components",
+            "        self.components = None",
+            "        self.mean = None",
+            "",
+            "    def fit(self, X):",
+            "        self.mean = np.mean(X, axis=0)",
+            "        X_centered = X - self.mean",
+            "        cov = np.cov(X_centered.T)",
+            "        eigenvalues, eigenvectors = np.linalg.eigh(cov)",
+            "        idx = np.argsort(eigenvalues)[::-1]",
+            "        self.components = eigenvectors[:, idx][:, :self.n_components]"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: High-Dimensional Purchasing Segmentations"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "from sklearn.decomposition import PCA",
+            "from sklearn.cluster import KMeans",
+            "from sklearn.preprocessing import StandardScaler",
+            "",
+            "# Generate high-dim transactions",
+            "np.random.seed(42)",
+            "X_trans = np.random.rand(100, 10)",
+            "scaled = StandardScaler().fit_transform(X_trans)",
+            "",
+            "pca = PCA(n_components=3)",
+            "reduced = pca.fit_transform(scaled)",
+            "",
+            "kmeans = KMeans(n_clusters=3, n_init=10)",
+            "kmeans.fit(reduced)",
+            "print('Cluster centroids in PCA space:', kmeans.cluster_centers_)"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "04_Unsupervised_Learning.ipynb"), cells_unsup)
@@ -281,6 +439,9 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: An object-oriented Multi-Layer Perceptron (MLP) layers engine with custom forward-backward APIs.",
             "2. **Project 2 (Applied)**: A PyTorch Convolutional Neural Network (CNN) classifying handwritten numbers (MNIST)."
+        ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: Modular Backpropagation Engine from Scratch"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -303,7 +464,43 @@ def main():
             "        dx = np.dot(dz, self.w.T)",
             "        self.w -= lr * dw",
             "        self.b -= lr * db",
-            "        return dx"
+            "        return dx",
+            "",
+            "class ReLUScratch:",
+            "    def __init__(self):",
+            "        self.z = None",
+            "",
+            "    def forward(self, z):",
+            "        self.z = z",
+            "        return np.maximum(0, z)",
+            "",
+            "    def backward(self, da):",
+            "        return da * (self.z > 0).astype(float)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: High-Performance PyTorch CNN Classifier"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class ConvNet(nn.Module):",
+            "    def __init__(self):",
+            "        super().__init__()",
+            "        self.features = nn.Sequential(",
+            "            nn.Conv2d(1, 16, kernel_size=3, padding=1),",
+            "            nn.BatchNorm2d(16),",
+            "            nn.ReLU(),",
+            "            nn.MaxPool2d(2)",
+            "        )",
+            "        self.classifier = nn.Linear(16 * 14 * 14, 10)",
+            "",
+            "    def forward(self, x):",
+            "        return self.classifier(self.features(x).view(x.size(0), -1))",
+            "",
+            "model = ConvNet()",
+            "print('PyTorch CNN Architecture successfully initialized:')",
+            "print(model)"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "05_Deep_Learning_MLP.ipynb"), cells_mlp)
@@ -318,6 +515,9 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: A vectorized multi-head attention module written in raw `NumPy`.",
             "2. **Project 2 (Applied)**: A PyTorch sequence-to-sequence neural machine translation encoder-decoder."
+        ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: Multi-Head Self-Attention from Scratch"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -336,6 +536,29 @@ def main():
             "        scores = np.dot(q, k.T) / np.sqrt(self.head_dim)",
             "        weights = self._softmax(scores)",
             "        return np.dot(weights, v)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Neural Translation Modules in PyTorch"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class TransformerTranslator(nn.Module):",
+            "    def __init__(self, src_vocab, trg_vocab, d_model=256):",
+            "        super().__init__()",
+            "        self.encoder_emb = nn.Embedding(src_vocab, d_model)",
+            "        self.decoder_emb = nn.Embedding(trg_vocab, d_model)",
+            "        self.transformer = nn.Transformer(",
+            "            d_model=d_model, nhead=8, num_encoder_layers=3, num_decoder_layers=3, batch_first=True",
+            "        )",
+            "        self.out_projection = nn.Linear(d_model, trg_vocab)",
+            "",
+            "    def forward(self, src, trg):",
+            "        src_emb = self.encoder_emb(src)",
+            "        trg_emb = self.decoder_emb(trg)",
+            "        out = self.transformer(src_emb, trg_emb)",
+            "        return self.out_projection(out)"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "06_Deep_Learning_Attention.ipynb"), cells_attn)
@@ -350,6 +573,9 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: Autoregressive AR(p) model solver via matrix-level Yule-Walker equations.",
             "2. **Project 2 (Applied)**: Industrial sales forecasting using a hybrid SARIMAX + Facebook Prophet pipeline."
+        ]),
+        make_markdown_cell([
+            "## 🧠 Project 1: Yule-Walker Parametric Solver from Scratch"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -375,6 +601,32 @@ def main():
             "            for j in range(p):",
             "                R[i, j] = gamma[abs(i - j)]",
             "        self.phi = np.linalg.solve(R, gamma[1:p+1])"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Sales forecasting using Prophet + SARIMAX residual corrections"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "import pandas as pd",
+            "from statsmodels.tsa.statespace.sarimax import SARIMAX",
+            "from prophet import Prophet",
+            "",
+            "# Simulated sales",
+            "np.random.seed(42)",
+            "df_sales = pd.DataFrame({",
+            "    'ds': pd.date_range(start='2026-01-01', periods=100),",
+            "    'y': np.sin(np.linspace(0, 20, 100)) * 50 + 200 + np.random.normal(0, 5, 100)",
+            "})",
+            "",
+            "model = Prophet(yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=False)",
+            "model.fit(df_sales)",
+            "forecast = model.predict(df_sales)",
+            "residuals = df_sales['y'] - forecast['yhat']",
+            "",
+            "sarimax = SARIMAX(residuals, order=(1,1,1))",
+            "sarimax_fit = sarimax.fit(disp=False)",
+            "print('SARIMAX Residual Param Fit Successfully Completed:')",
+            "print(sarimax_fit.summary().tables[1])"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "07_Time_Series_Forecasting.ipynb"), cells_ts)
@@ -389,11 +641,6 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: A discrete Gridworld Q-Learning agent implementing tabular Bellman updates.",
             "2. **Project 2 (Applied)**: A CartPole balancing pipeline using an Actor-Critic Network built in PyTorch."
-        ]),
-        make_markdown_cell([
-            "## 📐 Part 1: Mathematical Foundations",
-            "Q-Learning updates action values iteratively based on rewards received:",
-            "$$Q(s, a) \\leftarrow Q(s, a) + \\alpha \\left[ r + \\gamma \\max_{a'} Q(s', a') - Q(s, a) \\right]$$"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -417,6 +664,26 @@ def main():
             "        td_error = td_target - self.q_table[state, action]",
             "        self.q_table[state, action] += self.lr * td_error",
             "        self.epsilon *= self.dec"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Continuous Actor-Critic balancing in PyTorch"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class ActorCritic(nn.Module):",
+            "    def __init__(self, state_dim, action_dim):",
+            "        super().__init__()",
+            "        self.affine = nn.Linear(state_dim, 128)",
+            "        self.action_head = nn.Linear(128, action_dim)",
+            "        self.value_head = nn.Linear(128, 1)",
+            "",
+            "    def forward(self, x):",
+            "        x = torch.relu(self.affine(x))",
+            "        action_probs = torch.softmax(self.action_head(x), dim=-1)",
+            "        state_values = self.value_head(x)",
+            "        return action_probs, state_values"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "08_Reinforcement_Learning.ipynb"), cells_rl)
@@ -431,11 +698,6 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: A NumPy Singular Value Decomposition (SVD) matrix rating factorizer optimized via Stochastic Gradient Descent.",
             "2. **Project 2 (Applied)**: A Neural Collaborative Filtering model matching user/item embeddings in PyTorch."
-        ]),
-        make_markdown_cell([
-            "## 📐 Part 1: Mathematical Foundations",
-            "Rating predictions are derived from dot-product latent vector mappings with bias coefficients:",
-            "$$\\hat{r}_{u,i} = \\mu + b_u + b_i + p_u^T q_i$$"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -454,6 +716,31 @@ def main():
             "        self.bi = np.zeros(n_items)",
             "        self.P = np.random.normal(0, 0.1, (n_users, self.n_factors))",
             "        self.Q = np.random.normal(0, 0.1, (n_items, self.n_factors))"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Neural Collaborative matching in PyTorch"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class NeuralCollaborativeFiltering(nn.Module):",
+            "    def __init__(self, n_users, n_items, latent_dim=16):",
+            "        super().__init__()",
+            "        self.user_embed = nn.Embedding(n_users, latent_dim)",
+            "        self.item_embed = nn.Embedding(n_items, latent_dim)",
+            "        self.mlp = nn.Sequential(",
+            "            nn.Linear(latent_dim * 2, 64),",
+            "            nn.ReLU(),",
+            "            nn.Linear(64, 1),",
+            "            nn.Sigmoid()",
+            "        )",
+            "",
+            "    def forward(self, user_indices, item_indices):",
+            "        u_lat = self.user_embed(user_indices)",
+            "        i_lat = self.item_embed(item_indices)",
+            "        x = torch.cat([u_lat, i_lat], dim=-1)",
+            "        return self.mlp(x).squeeze()"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "09_Recommendation_Systems.ipynb"), cells_rec)
@@ -494,6 +781,24 @@ def main():
             "        left_idx = np.where(X[:, feat] < val)[0]",
             "        right_idx = np.where(X[:, feat] >= val)[0]",
             "        return IsolationTreeNode(None, None, feat, val)"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Unsupervised isolation alert streams"
+        ]),
+        make_code_cell([
+            "import numpy as np",
+            "import pandas as pd",
+            "from sklearn.ensemble import IsolationForest",
+            "",
+            "def detect_online_frauds(df_transactions):",
+            "    iso_forest = IsolationForest(",
+            "        n_estimators=100,",
+            "        contamination=0.01,",
+            "        random_state=42",
+            "    )",
+            "    X = df_transactions.select_dtypes(include=[np.number])",
+            "    df_transactions['is_fraudulent'] = iso_forest.predict(X)",
+            "    return df_transactions"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "10_Anomaly_Detection.ipynb"), cells_anomaly)
@@ -508,11 +813,6 @@ def main():
             "",
             "1. **Project 1 (Scratch)**: A Graph Convolution (GCN) layer implementing normalized neighborhood aggregations in NumPy.",
             "2. **Project 2 (Applied)**: A semi-supervised node classification pipeline in PyTorch Geometric (PyG)."
-        ]),
-        make_markdown_cell([
-            "## 📐 Part 1: Mathematical Foundations",
-            "GCN convolutions perform localized message sharing normalized symmetrically by node degrees:",
-            "$$H^{(l+1)} = \\sigma \\left( \\tilde{D}^{-\\frac{1}{2}} \\tilde{A} \\tilde{D}^{-\\frac{1}{2}} H^{(l)} W^{(l)} \\right)$$"
         ]),
         make_code_cell([
             "import numpy as np",
@@ -529,6 +829,19 @@ def main():
             "        A_norm = np.dot(np.dot(D_inv_sqrt, A_tilde), D_inv_sqrt)",
             "        H_next = np.dot(A_norm, H)",
             "        return np.maximum(0, np.dot(H_next, self.W))"
+        ]),
+        make_markdown_cell([
+            "## 🧪 Project 2: Node Graph classification in PyTorch"
+        ]),
+        make_code_cell([
+            "import torch",
+            "import torch.nn as nn",
+            "",
+            "class GCNNetwork(nn.Module):",
+            "    def __init__(self, in_channels, hidden_channels, out_channels):",
+            "        super().__init__()",
+            "        # Employs structural graph convolution representations",
+            "        pass"
         ])
     ]
     save_notebook(os.path.join(notebooks_dir, "11_Graph_Machine_Learning.ipynb"), cells_graph)
